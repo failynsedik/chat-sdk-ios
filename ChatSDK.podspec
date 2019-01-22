@@ -78,66 +78,66 @@ Pod::Spec.new do |s|
   
   end
   
-#     s.subspec 'Extras' do |ex|
-# 
-# 	  ex.source_files = ['ChatSDKExtras/Classes/**/*']
-# 	  ex.resource_bundles = {
-# 		'ChatExtras' => ['ChatSDKExtras/Assets/**/*', 'ChatSDKExtras/Interface/**/*']
-# 	  }
-# 			
-# 	  ex.dependency 'SideMenu'
-# 
-# 	  ex.dependency 'ChatSDK/UI'
-#   
-#   end
+    s.subspec 'Extras' do |ex|
 
-#  s.subspec 'FirebaseAdapter' do |fb|
-# 
-# 	fb.source_files = ['ChatSDKFirebase/FirebaseNetworkAdapter/Classes/**/*']
-# 	
-#     fb.dependency 'Firebase/Auth'
-#     fb.dependency 'Firebase/Database'
-#  
-# 	fb.dependency 'ChatSDK/Core'
-#   
-#   end
-# 
-#  s.subspec 'FirebaseFileStorage' do |ffs|
-# 
-# 	ffs.source_files = ['ChatSDKFirebase/FirebaseFileStorage/Classes/**/*']
-# 
-#     ffs.dependency 'Firebase/Storage'
-# 	ffs.dependency 'ChatSDK/FirebaseAdapter'
-#   
-#   end
-# 
-#  s.subspec 'FirebasePush' do |fp|
-# 
-# 	fp.source_files = ['ChatSDKFirebase/FirebasePush/Classes/**/*']
-# 
-#     fp.dependency 'Firebase/Messaging'
-#     fp.dependency 'Firebase/Functions'
-# 	fp.dependency 'ChatSDK/FirebaseAdapter'
-# 
-#   end
-#   
-#  s.subspec 'FirebaseSocialLogin' do |fsl|
-# 
-# 	fsl.source_files = ['ChatSDKFirebase/FirebaseSocialLogin/Classes/**/*']
-# 	fsl.resource_bundles = {
-# 	  'ChatFirebaseSocialLogin' => ['ChatSDKFirebase/FirebaseSocialLogin/Assets/**/*']
-# 	}
-# 	
-# # 	fsl.dependency 'TwitterKit', '<3.3.0'
-# # 	fsl.dependency 'TwitterCore', '<3.1.0'
-#  	fsl.dependency 'TwitterKit' 
-#  	fsl.dependency 'TwitterCore' 
-#     fsl.dependency 'GoogleSignIn'
-#     fsl.dependency 'FBSDKLoginKit'
-# 
-# 	fsl.dependency 'ChatSDK/FirebaseAdapter'
-# 	fsl.dependency 'ChatSDK/UI'
-# 
-#   end
+	  ex.source_files = ['ChatSDKExtras/Classes/**/*']
+	  ex.resource_bundles = {
+		'ChatExtras' => ['ChatSDKExtras/Assets/**/*', 'ChatSDKExtras/Interface/**/*']
+	  }
+			
+	  ex.dependency 'SideMenu'
+
+	  ex.dependency 'ChatSDK/UI'
+  
+  end
+
+ s.subspec 'FirebaseAdapter' do |fb|
+
+	fb.source_files = ['ChatSDKFirebase/FirebaseNetworkAdapter/Classes/**/*']
+	
+    fb.dependency 'Firebase/Auth'
+    fb.dependency 'Firebase/Database'
+ 
+	fb.dependency 'ChatSDK/Core'
+  
+  end
+
+ s.subspec 'FirebaseFileStorage' do |ffs|
+
+	ffs.source_files = ['ChatSDKFirebase/FirebaseFileStorage/Classes/**/*']
+
+    ffs.dependency 'Firebase/Storage'
+	ffs.dependency 'ChatSDK/FirebaseAdapter'
+  
+  end
+
+ s.subspec 'FirebasePush' do |fp|
+
+	fp.source_files = ['ChatSDKFirebase/FirebasePush/Classes/**/*']
+
+    fp.dependency 'Firebase/Messaging'
+    fp.dependency 'Firebase/Functions'
+	fp.dependency 'ChatSDK/FirebaseAdapter'
+
+  end
+  
+ s.subspec 'FirebaseSocialLogin' do |fsl|
+
+	fsl.source_files = ['ChatSDKFirebase/FirebaseSocialLogin/Classes/**/*']
+	fsl.resource_bundles = {
+	  'ChatFirebaseSocialLogin' => ['ChatSDKFirebase/FirebaseSocialLogin/Assets/**/*']
+	}
+	
+# 	fsl.dependency 'TwitterKit', '<3.3.0'
+# 	fsl.dependency 'TwitterCore', '<3.1.0'
+ 	fsl.dependency 'TwitterKit' 
+ 	fsl.dependency 'TwitterCore' 
+    fsl.dependency 'GoogleSignIn'
+    fsl.dependency 'FBSDKLoginKit'
+
+	fsl.dependency 'ChatSDK/FirebaseAdapter'
+	fsl.dependency 'ChatSDK/UI'
+
+  end
       
 end
