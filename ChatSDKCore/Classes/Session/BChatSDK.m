@@ -108,7 +108,8 @@ static BChatSDK * instance;
 
 +(BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     [application setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
-    if(BChatSDK.push) {
+    
+    if(BChatSDK.push && BChatSDK.config.shouldAskForNotificationsPermission) {
         [BChatSDK.push registerForPushNotificationsWithApplication:application launchOptions:launchOptions];
     }
     if(BChatSDK.socialLogin) {
@@ -140,7 +141,7 @@ static BChatSDK * instance;
 -(void) clearDataIfNecessary {
     NSString * rootPath = [[NSUserDefaults standardUserDefaults] stringForKey:bRootPathKey];
     NSString * newRootPath = _configuration.rootPath;
-
+    
     NSString * databaseVersion = [[NSUserDefaults standardUserDefaults] stringForKey:bDatabaseVersionKey];
     NSString * newDatabaseVersion = _configuration.databaseVersion;
     
@@ -152,7 +153,7 @@ static BChatSDK * instance;
         [BChatSDK.db deleteAllData];
         [BChatSDK.db saveToStore];
     }
-
+    
     if (newRootPath) {
         [[NSUserDefaults standardUserDefaults] setObject:newRootPath forKey:bRootPathKey];
     }
