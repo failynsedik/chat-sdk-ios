@@ -55,7 +55,7 @@
 -(RXPromise *) push {
     
     RXPromise * promise = [RXPromise new];
-
+    
     // Add the message to Firebase
     FIRDatabaseReference * ref = [self ref];
     _model.entityID = ref.key;
@@ -81,22 +81,48 @@
     return data;
 }
 
+-(void) setReadStatusOnFirebase: (bMessageReadStatus) status forUserID: (NSString*) userID {
+    
+    FIRDatabaseReference* threadMessagesReference = [FIRDatabaseReference threadMessagesRef:self.model.thread.entityID];
+    
+    FIRDatabaseReference* messageReference = [threadMessagesReference child:self.model.entityID];
+    
+    FIRDatabaseReference* readStatusReference = [messageReference child:bReadPath];
+    
+    FIRDatabaseReference* readByReference = [readStatusReference child:BChatSDK.currentUser.entityID];
+    
+    FIRDatabaseReference* statusValueReference = [readByReference child:bStatus];
+    
+    NSNumber* numberStatus = [[NSNumber alloc] initWithInt:status];
+    
+    [statusValueReference setValue:numberStatus withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+        
+        if (!error) {
+            self.model.read = numberStatus;
+            
+            NSDictionary* statusDictionary = @{userID:
+                                                   @{@"status": numberStatus}
+                                               };
+            
+            self.model.readStatus = statusDictionary;
+            [BChatSDK.core save];
+            [BChatSDK.core saveToStore];
+        } else {
+            NSLog(@"Reading process failed");
+        }
+        
+    }];
+    
+}
+
 -(NSMutableDictionary *) serialize {
     NSMutableDictionary * dict = [NSMutableDictionary dictionaryWithDictionary:@{bType: _model.type,
+                                                                                 bJSONV2: _model.json,
                                                                                  bDate: [FIRServerValue timestamp],
                                                                                  bUserFirebaseID: _model.userModel.entityID,
                                                                                  bReadPath: self.initialReadReceipts,
                                                                                  bMetaPath: _model.meta ? _model.meta : @{}}];
-    if(BChatSDK.config.includeMessagePayload) {
-        dict[bPayload] = _model.textString;
-    }
-//    if(BChatSDK.config.includeMessageJSON) {
-//        dict[bJSON] = _model.text;
-//    }
-    if(BChatSDK.config.includeMessageJSONV2) {
-        dict[bJSONV2] = _model.json;
-    }
-
+    
     return dict;
 }
 
@@ -247,7 +273,7 @@
             [promise rejectWithReason:error];
         }
     }];
-
+    
     return promise;
 }
 
