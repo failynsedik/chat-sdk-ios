@@ -24,7 +24,7 @@
     BOOL authenticated = [self userAuthenticated];
     if (authenticated) {
         
-//        [[FIRAuth auth] signOut:Nil];
+        //        [[FIRAuth auth] signOut:Nil];
         
         // If the user listeners have been added then authenticate completed successfully
         if(_userAuthenticatedThisSession) {
@@ -51,19 +51,19 @@
     RXPromise * promise = [RXPromise new];
     
     id<PUser> user = BChatSDK.currentUser;
-
+    
     
     // Stop observing the user
     if(user) {
         NSDictionary * data = @{bHookWillLogout_PUser: user};
         [BChatSDK.hook executeHookWithName:bHookWillLogout data:data];
-
+        
         [BStateManager userOff: user.entityID];
     }
     
     NSError * error = Nil;
     if([[FIRAuth auth] signOut:&error]) {
-
+        
         _userAuthenticatedThisSession = NO;
         [self setLoginInfo:Nil];
         [BChatSDK.core goOffline];
@@ -74,6 +74,13 @@
             NSDictionary * data = @{bHookDidLogout_PUser: user};
             [BChatSDK.hook executeHookWithName:bHookDidLogout data:data];
         }
+        
+        // *** FIXED INCORRECT USER'S DATA ***
+        // (GLOBAL CLEAN-UP)
+        [BChatSDK.db deleteAllData];
+        [BChatSDK.core save];
+        [BChatSDK.core saveToStore];
+        
         
         [promise resolveWithResult:Nil];
     }
@@ -110,7 +117,7 @@
                     FIRAuthCredential * credential = [FIRFacebookAuthProvider credentialWithAccessToken:token];
                     //[promise resolveWithResult:credential];
                     [[FIRAuth auth] signInAndRetrieveDataWithCredential:credential completion:handleResult];
-
+                    
                     return Nil;
                 }, ^id (NSError * error) {
                     handleResult(Nil, error);
@@ -200,13 +207,13 @@
     __weak __typeof__(self) weakSelf = self;
     return tokenPromise.thenOnMain(^id(NSString * token) {
         __typeof__(self) strongSelf = weakSelf;
-
+        
         NSString * uid = firebaseUser.uid;
         
         // Save the authentication ID for the current user
         // Set the current user
         [strongSelf setLoginInfo:@{bAuthenticationIDKey: uid,
-                             bTokenKey: token ? token : @""}];
+                                   bTokenKey: token ? token : @""}];
         
         CCUserWrapper * user = [CCUserWrapper userWithAuthUserData:firebaseUser];
         if (details.name && !user.model.name) {
@@ -217,7 +224,7 @@
             strongSelf->_userAuthenticatedThisSession = YES;
             // Update the user from the remote server
             return [user once].thenOnMain(^id(id<PUserWrapper> user_) {
-            
+                
                 [BChatSDK.hook executeHookWithName:bHookUserAuthFinished data:@{bHookUserAuthFinished_PUser: user.model}];
                 
                 [BChatSDK.core save];
