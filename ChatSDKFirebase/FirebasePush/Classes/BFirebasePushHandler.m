@@ -14,7 +14,7 @@
 
 -(instancetype) init {
     if((self = [super init])) {
-//        [FIRApp configure];
+        //        [FIRApp configure];
         [FIRMessaging messaging].delegate = self;
         
         [BChatSDK.hook addHook:[BHook hook:^(NSDictionary * data) {
@@ -23,55 +23,55 @@
                 [self unsubscribeFromPushChannel:user.pushChannel];
             }
         }] withName:bHookWillLogout];
-
+        
         [BChatSDK.hook addHook:[BHook hook:^(NSDictionary * data) {
             id<PUser> user = data[bHookDidAuthenticate_PUser];
             if (user) {
                 [self subscribeToPushChannel:user.pushChannel];
             }
         }] withName:bHookDidAuthenticate];
-
         
-//         Send a local notification when a message comes in
-//        [BChatSDK.hook addHook:[BHook hook:^(NSDictionary * value) {
-//            id<PMessage> message = (id<PMessage>) value[bHookMessageReceived_PMessage];
-//
-//            if (!message.senderIsMe) {
-//
-//#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
-//
-//                UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
-//                content.title = [NSString localizedUserNotificationStringForKey:message.userModel.name arguments:nil];
-//                content.body = [NSString localizedUserNotificationStringForKey:message.textString
-//                                                                     arguments:nil];
-//                content.sound = [UNNotificationSound defaultSound];
-//
-//                /// 4. update application icon badge number
-//                content.badge = @([[UIApplication sharedApplication] applicationIconBadgeNumber] + 1);
-//
-//                content.categoryIdentifier = bChatSDKNotificationCategory;
-//
-//                // Deliver the notification in five seconds.
-//                UNTimeIntervalNotificationTrigger *trigger = [UNTimeIntervalNotificationTrigger
-//                                                              triggerWithTimeInterval:10 repeats:NO];
-//
-//                UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:message.entityID
-//                                                                                      content:content
-//                                                                                      trigger:trigger];
-//                /// 3. schedule localNotification
-//                UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
-//                [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
-//                    if (!error) {
-//                        NSLog(@"add NotificationRequest succeeded!");
-//                    }
-//                }];
-//
-//            }
-//
-//#endif
-//
-//        }] withName: bHookMessageRecieved];
-//
+        
+        //         Send a local notification when a message comes in
+        //        [BChatSDK.hook addHook:[BHook hook:^(NSDictionary * value) {
+        //            id<PMessage> message = (id<PMessage>) value[bHookMessageReceived_PMessage];
+        //
+        //            if (!message.senderIsMe) {
+        //
+        //#if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
+        //
+        //                UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
+        //                content.title = [NSString localizedUserNotificationStringForKey:message.userModel.name arguments:nil];
+        //                content.body = [NSString localizedUserNotificationStringForKey:message.textString
+        //                                                                     arguments:nil];
+        //                content.sound = [UNNotificationSound defaultSound];
+        //
+        //                /// 4. update application icon badge number
+        //                content.badge = @([[UIApplication sharedApplication] applicationIconBadgeNumber] + 1);
+        //
+        //                content.categoryIdentifier = bChatSDKNotificationCategory;
+        //
+        //                // Deliver the notification in five seconds.
+        //                UNTimeIntervalNotificationTrigger *trigger = [UNTimeIntervalNotificationTrigger
+        //                                                              triggerWithTimeInterval:10 repeats:NO];
+        //
+        //                UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:message.entityID
+        //                                                                                      content:content
+        //                                                                                      trigger:trigger];
+        //                /// 3. schedule localNotification
+        //                UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+        //                [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
+        //                    if (!error) {
+        //                        NSLog(@"add NotificationRequest succeeded!");
+        //                    }
+        //                }];
+        //
+        //            }
+        //
+        //#endif
+        //
+        //        }] withName: bHookMessageRecieved];
+        //
     }
     return self;
 }
@@ -79,49 +79,49 @@
 -(void) registerForPushNotificationsWithApplication: (UIApplication *) app launchOptions: (NSDictionary *) options {
     
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
-
+    
     UNUserNotificationCenter * center = [UNUserNotificationCenter currentNotificationCenter];
     notificationDelegate = [[BLocalNotificationDelegate alloc] init];
     center.delegate = notificationDelegate;
     
     [center requestAuthorizationWithOptions:UNAuthorizationOptionBadge | UNAuthorizationOptionSound | UNAuthorizationOptionAlert
-                                                                        completionHandler:^(BOOL granted, NSError * error) {
-                                                                            if(granted) {
-                                                                                NSLog(@"Local notifications granted");
-
-                                                                                UNTextInputNotificationAction * replyAction = [UNTextInputNotificationAction actionWithIdentifier:bChatSDKReplyAction
-                                                                                                                                                                            title:[NSBundle t: bReply]
-                                                                                                                                                                          options:UNNotificationActionOptionNone
-                                                                                                                                                             textInputButtonTitle:[NSBundle t: bSend]
-                                                                                                                                                             textInputPlaceholder:[NSBundle t: bWriteSomething]];
-                                                                                
-                                                                                UNNotificationAction * openAction = [UNNotificationAction actionWithIdentifier:bChatSDKOpenAppAction
-                                                                                                                                                         title:[NSBundle t:bOpen]
-                                                                                                                                                       options:UNNotificationActionOptionForeground];
-                                                                                
-                                                                                UNNotificationCategory * category = [UNNotificationCategory categoryWithIdentifier:BChatSDK.config.pushNotificationAction ? BChatSDK.config.pushNotificationAction : bChatSDKNotificationCategory
-                                                                                                                                                           actions:@[replyAction, openAction]
-                                                                                                                                                 intentIdentifiers:@[]
-                                                                                                                                                           options:UNNotificationCategoryOptionCustomDismissAction];
-
-                                                                                NSSet * categories = [NSSet setWithObjects:category, nil];
-                                                                                
-                                                                                [center setNotificationCategories:categories];
-                                                                                
-                                                                                [center getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings * settings) {
-                                                                                    NSLog(@"Settings");
-                                                                                }];
-                                                                                
-                                                                                dispatch_async(dispatch_get_main_queue(), ^{
-                                                                                    [[UIApplication sharedApplication] registerForRemoteNotifications];
-                                                                                });
-
-                                                                            }
-    }];
-
+                          completionHandler:^(BOOL granted, NSError * error) {
+                              if(granted) {
+                                  NSLog(@"Local notifications granted");
+                                  
+                                  UNTextInputNotificationAction * replyAction = [UNTextInputNotificationAction actionWithIdentifier:bChatSDKReplyAction
+                                                                                                                              title:[NSBundle t: bReply]
+                                                                                                                            options:UNNotificationActionOptionNone
+                                                                                                               textInputButtonTitle:[NSBundle t: bSend]
+                                                                                                               textInputPlaceholder:[NSBundle t: bWriteSomething]];
+                                  
+                                  UNNotificationAction * openAction = [UNNotificationAction actionWithIdentifier:bChatSDKOpenAppAction
+                                                                                                           title:[NSBundle t:bOpen]
+                                                                                                         options:UNNotificationActionOptionForeground];
+                                  
+                                  UNNotificationCategory * category = [UNNotificationCategory categoryWithIdentifier:BChatSDK.config.pushNotificationAction ? BChatSDK.config.pushNotificationAction : bChatSDKNotificationCategory
+                                                                                                             actions:@[replyAction, openAction]
+                                                                                                   intentIdentifiers:@[]
+                                                                                                             options:UNNotificationCategoryOptionCustomDismissAction];
+                                  
+                                  NSSet * categories = [NSSet setWithObjects:category, nil];
+                                  
+                                  [center setNotificationCategories:categories];
+                                  
+                                  [center getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings * settings) {
+                                      NSLog(@"Settings");
+                                  }];
+                                  
+                                  dispatch_async(dispatch_get_main_queue(), ^{
+                                      [[UIApplication sharedApplication] registerForRemoteNotifications];
+                                  });
+                                  
+                              }
+                          }];
+    
 #else
     
-
+    
     UIUserNotificationType allNotificationTypes =
     (UIUserNotificationTypeSound | UIUserNotificationTypeAlert | UIUserNotificationTypeBadge);
     
@@ -150,10 +150,10 @@
     NSSet * categories = [NSSet setWithArray:@[notificationCategory]];
     
     UIUserNotificationSettings *settings = [UIUserNotificationSettings settingsForTypes:allNotificationTypes categories:categories];
-
+    
     [[UIApplication sharedApplication] registerUserNotificationSettings:settings];
     [[UIApplication sharedApplication] registerForRemoteNotifications];
-
+    
 #endif
     
     NSString *fcmToken = [FIRMessaging messaging].FCMToken;
@@ -162,7 +162,7 @@
 }
 
 -(void) messaging:(FIRMessaging *)messaging didReceiveRegistrationToken:(NSString *)fcmToken {
-
+    
 }
 
 - (void)messaging:(nonnull FIRMessaging *)messaging didRefreshRegistrationToken:(nonnull NSString *)fcmToken {
@@ -179,21 +179,21 @@
 }
 
 - (void) application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-//    if (application.applicationState != UIApplicationStateActive) {
-        // TODO: Do we need to show the notficaiton?
-        NSString * threadEntityID = userInfo[bPushThreadEntityID];
-        if(threadEntityID) {
-            id<PThread> thread = [BChatSDK.db fetchOrCreateEntityWithID:threadEntityID withType:bThreadEntity];
-            
-            if (BChatSDK.auth.userAuthenticatedThisSession) {
-                [[NSNotificationCenter defaultCenter] postNotificationName:bNotificationPresentChatView object:Nil userInfo: @{bNotificationPresentChatView_PThread: thread}];
-            }
-            else {
-                BBackgroundPushAction * action = [BBackgroundPushAction actionWithType:bPushActionTypeOpenThread payload:@{bPushThreadEntityID: threadEntityID}];
-                [BChatSDK.shared.pushQueue addToQueue:action];
-            }
+    //    if (application.applicationState != UIApplicationStateActive) {
+    // TODO: Do we need to show the notficaiton?
+    NSString * threadEntityID = userInfo[bPushThreadEntityID];
+    if(threadEntityID) {
+        id<PThread> thread = [BChatSDK.db fetchOrCreateEntityWithID:threadEntityID withType:bThreadEntity];
+        
+        if (BChatSDK.auth.userAuthenticatedThisSession) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:bNotificationPresentChatView object:Nil userInfo: @{bNotificationPresentChatView_PThread: thread}];
         }
-//    }
+        else {
+            BBackgroundPushAction * action = [BBackgroundPushAction actionWithType:bPushActionTypeOpenThread payload:@{bPushThreadEntityID: threadEntityID}];
+            [BChatSDK.shared.pushQueue addToQueue:action];
+        }
+    }
+    //    }
 }
 
 -(void) subscribeToPushChannel: (NSString *) channel {
@@ -210,6 +210,8 @@
         return;
     }
     
+    NSMutableString* pushToken = @"";
+    
     // Get a list of recipients
     NSMutableDictionary * users = [NSMutableDictionary new];
     for(id<PUser> user in message.thread.users) {
@@ -217,6 +219,10 @@
             if (!user.online.boolValue || !BChatSDK.config.onlySendPushToOfflineUsers) {
                 users[user.pushChannel] = user.name;
             }
+            
+            //            id<PUser> pushUser = user;
+            pushToken = user.meta[@"pushToken"];
+            
         }
     }
     
@@ -226,14 +232,15 @@
     
     NSMutableDictionary * data = [NSMutableDictionary dictionaryWithDictionary: @{@"userIds" : users,
                                                                                   @"body": message.textString,
-                                                                                  @"type": message.type,
-                                                                                  @"senderId": message.userModel.entityID,
+                                                                                  @"type": (NSString*)message.type,
+                                                                                  @"senderId": (NSString*)message.userModel.entityID,
                                                                                   @"threadId": message.thread.entityID,
                                                                                   @"action": BChatSDK.config.pushNotificationAction ? BChatSDK.config.pushNotificationAction : bChatSDKNotificationCategory,
+                                                                                  @"pushToken": pushToken
                                                                                   }];
     
     if(BChatSDK.config.pushNotificationSound) {
-        data[@"sound"] = BChatSDK.config.pushNotificationSound;
+        data[@"sound"] = (NSString*)BChatSDK.config.pushNotificationSound;
     }
     
     [[[FIRFunctions functions] HTTPSCallableWithName:@"pushToChannels"] callWithObject:data completion:^(FIRHTTPSCallableResult * result, NSError * error) {
@@ -249,7 +256,7 @@
             NSLog(@"Success");
         }
     }];
-
+    
 }
 
 
