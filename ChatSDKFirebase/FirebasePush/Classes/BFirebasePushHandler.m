@@ -223,9 +223,7 @@
             pushToken = user.meta[@"pushToken"];
             userOS = user.meta[@"user_os"];
         } else if (user.isMe) {
-            if (!user.online.boolValue || !BChatSDK.config.onlySendPushToOfflineUsers) {
-                users[user.pushChannel] = user.name;
-            }
+            users[user.pushChannel] = user.name;
         }
     }
     
