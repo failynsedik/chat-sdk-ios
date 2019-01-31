@@ -217,13 +217,15 @@
     NSMutableDictionary * users = [NSMutableDictionary new];
     for(id<PUser> user in message.thread.users) {
         if(!user.isMe && user.entityID && user.entityID.length && user.name && user.name.length) {
-            if (!user.online.boolValue || !BChatSDK.config.onlySendPushToOfflineUsers) {
-                users[user.pushChannel] = user.name;
-            }
+            
             
             //            id<PUser> pushUser = user;
             pushToken = user.meta[@"pushToken"];
             userOS = user.meta[@"user_os"];
+        } else if (user.isMe) {
+            if (!user.online.boolValue || !BChatSDK.config.onlySendPushToOfflineUsers) {
+                users[user.pushChannel] = user.name;
+            }
         }
     }
     
