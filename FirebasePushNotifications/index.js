@@ -8,7 +8,7 @@ admin.initializeApp();
 let Sound = "default";
 let iOSAction = "co.chatsdk.QuickReply";
 
-function buildMessage (title, theBody, clickAction, sound, type, senderId, threadId, recipientId) {
+function buildMessage (title, theBody, clickAction, sound, type, senderId, threadId, recipientId, pushToken, userOS) {
     // Make the token payload
     let body = theBody;
 
@@ -39,9 +39,16 @@ function buildMessage (title, theBody, clickAction, sound, type, senderId, threa
         chat_sdk_thread_entity_id: threadId,
         chat_sdk_user_entity_id: senderId,
         chat_sdk_push_title: title,
-        chat_sdk_push_body: body,
+        chat_sdk_push_body: body
     };
-
+    
+    let androidData = {
+        chat_sdk_thread_entity_id: threadId,
+        chat_sdk_user_entity_id: senderId,
+        title: title,
+        body: body,
+    };
+    
     // Make the user ID safe
     recipientId = recipientId.split(".").join("1");
     recipientId = recipientId.split("%2E").join("1");
@@ -49,27 +56,43 @@ function buildMessage (title, theBody, clickAction, sound, type, senderId, threa
     recipientId = recipientId.split("%40").join("2");
     recipientId = recipientId.split(":").join("3");
     recipientId = recipientId.split("%3A").join("3");
-
-    return {
-        data: data,
-        apns: {
-            headers: {
-            },
-            payload: {
-                aps: {
-                    alert: {
-                        title: title,
-                        body: body
-                    },
-                    badge: 1,
-                    sound: sound,
-                    priority: "high",
-                    category: clickAction,
-                }
-            },
-        },
-        topic: recipientId,
+    
+    var message = {
+    data: data,
+    apns: {
+    headers: {
+    },
+    payload: {
+    aps: {
+    alert: {
+    title: title,
+    body: body
+    },
+    badge: 1,
+    sound: sound,
+    priority: "high",
+    category: clickAction
+    }
+    }
+    },
+    token: pushToken
     };
+    
+    var androidMessage = {
+    android: {
+    ttl: 3600 * 1000, // 1 hour in milliseconds
+    priority: 'high',
+    notification: {
+    title: title,
+    body: body,
+    color: '#000000'
+    }
+    },
+    token: pushToken
+    };
+    
+    return (userOS === "android") ? androidMessage: message;
+
 }
 
 function getUserName(usersRef, userId) {
@@ -154,7 +177,10 @@ function getUserName(usersRef, userId) {
 exports.pushToChannels = functions.https.onCall((data, context) => {
 //  exports.pushToChannels = functions.https.onRequest((req, res) => {
 
+                                                
     let body = data.body;
+    let pushToken = data.pushToken;
+    let userOS = data.user_os;
 
     let action = data.action;
     if(!action) {
@@ -188,7 +214,7 @@ exports.pushToChannels = functions.https.onCall((data, context) => {
     for(let uid in userIds) {
         if(userIds.hasOwnProperty(uid)) {
             let userName = userIds[uid];
-            let message = buildMessage(userName, body, action, sound, type, senderId, threadId, uid);
+            let message = buildMessage(userName, body, action, sound, type, senderId, threadId, uid, pushToken, userOS);
             status[uid] = message;
             admin.messaging().send(message);
         }
