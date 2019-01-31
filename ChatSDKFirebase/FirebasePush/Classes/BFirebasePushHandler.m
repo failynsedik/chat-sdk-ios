@@ -210,6 +210,7 @@
         return;
     }
     
+    NSMutableString* userOS = @"";
     NSMutableString* pushToken = @"";
     
     // Get a list of recipients
@@ -222,7 +223,7 @@
             
             //            id<PUser> pushUser = user;
             pushToken = user.meta[@"pushToken"];
-            
+            userOS = user.meta[@"user_os"];
         }
     }
     
@@ -236,12 +237,11 @@
                                                                                   @"senderId": (NSString*)message.userModel.entityID,
                                                                                   @"threadId": message.thread.entityID,
                                                                                   @"action": BChatSDK.config.pushNotificationAction ? BChatSDK.config.pushNotificationAction : bChatSDKNotificationCategory,
-                                                                                  @"pushToken": pushToken
+                                                                                  @"pushToken": pushToken,
+                                                                                  @"user_os": userOS,
+                                                                                  @"sound": @"psc.wav"
                                                                                   }];
     
-    if(BChatSDK.config.pushNotificationSound) {
-        data[@"sound"] = (NSString*)BChatSDK.config.pushNotificationSound;
-    }
     
     [[[FIRFunctions functions] HTTPSCallableWithName:@"pushToChannels"] callWithObject:data completion:^(FIRHTTPSCallableResult * result, NSError * error) {
         if (error) {
