@@ -20,7 +20,7 @@
     if ((self = [self init])) {
         NSString * entityID = snapshot.key;
         _model = [BChatSDK.db fetchOrCreateEntityWithID:entityID withType:bMessageEntity];
-        [self deserialize:snapshot.value];
+        [self deserialize:snapshot.valueInExportFormat];
     }
     return self;
 }
