@@ -114,8 +114,30 @@
 }
 
 -(void) sendLocalSystemMessageWithText:(NSString *)text type: (bSystemMessageType) type withThreadEntityID:(NSString *)threadID {
-    id<PMessage> message = [[[BMessageBuilder systemMessage:text type:type] thread:threadID] build];
-    [BHookNotification notificationMessageDidSend: message];
+    // Set the URLs for the images and save it in CoreData
+    id<PMessage> message = [BChatSDK.db createMessageEntity];
+    message.entityID = [BCoreUtilities getUUID];
+    
+    message.type = @(bMessageTypeSystem);
+    //message.text = text;
+    [message setTextString:text];
+    
+    id<PThread> thread = [BChatSDK.db fetchEntityWithID:threadID withType:bThreadEntity];
+    
+    message.date = [NSDate date];
+    message.userModel = self.currentUserModel;
+    message.delivered = @YES;
+    message.read = @YES;
+    message.flagged = @NO;
+    message.type = @(type);
+    
+    [thread addMessage: message];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:bNotificationMessageAdded
+                                                            object:Nil
+                                                          userInfo:@{bNotificationMessageAddedKeyMessage: message}];
+    });
 }
 
 
@@ -138,7 +160,7 @@
     NSString * currentUserID = BChatSDK.auth.currentUserEntityID;
     if (!_currentUser || ![_currentUserEntityID isEqual:currentUserID]) {
         _currentUser = [BChatSDK.db fetchEntityWithID:currentUserID
-                                                                   withType:bUserEntity];
+                                             withType:bUserEntity];
         _currentUserEntityID = currentUserID;
         [self save];
     }
@@ -292,7 +314,7 @@
         
         // Check to see if a thread already exists with these
         // two users
-        for (id<PThread> thread in [BChatSDK.core threadsWithType:bThreadType1to1 includeDeleted:YES includeEmpty:YES]) {
+        for (id<PThread> thread in [BChatSDK.core threadsWithType:bThreadFilterPrivateThread includeDeleted:YES includeEmpty:YES]) {
             if ([thread.users isEqual:usersToAddSet]) {
                 jointThread = thread;
                 break;
@@ -354,15 +376,15 @@
 
 - (NSArray *)threadsWithUsers:(NSArray *)users type:(bThreadType)type {
     NSMutableArray * threads = [NSMutableArray new];
-
+    
     NSSet * usersSet = [NSSet setWithArray:users];
-
+    
     for (id<PThread> thread in [BChatSDK.core threadsWithType:type]) {
         if([usersSet isEqual:thread.users]) {
             [threads addObject:thread];
         }
     }
-
+    
     return threads;
 }
 

@@ -48,7 +48,12 @@
 }
 
 + (RXPromise *)cacheFileFromURL:(NSURL *)url {
-    return [self cacheFileFromURL:url withFileName:[url.path lastPathComponent]];
+    NSString* filename = [url.path lastPathComponent];
+    if (filename != Nil) {
+        return [self cacheFileFromURL:url withFileName: filename];
+    } else {
+        return [self cacheFileFromURL:url withFileName: @""];
+    }
 }
 
 + (RXPromise *)createDirectoryWthName:(NSString *)name {

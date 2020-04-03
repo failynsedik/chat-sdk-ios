@@ -187,7 +187,7 @@ static BChatSDK * instance;
 -(void) clearDataIfNecessary {
     NSString * rootPath = [[NSUserDefaults standardUserDefaults] stringForKey:bRootPathKey];
     NSString * newRootPath = _configuration.rootPath;
-
+    
     NSString * databaseVersion = [[NSUserDefaults standardUserDefaults] stringForKey:bDatabaseVersionKey];
     NSString * newDatabaseVersion = _configuration.databaseVersion;
     
@@ -199,7 +199,7 @@ static BChatSDK * instance;
         [BChatSDK.db deleteAllData];
         [BChatSDK.db saveToStore];
     }
-
+    
     if (newRootPath) {
         [[NSUserDefaults standardUserDefaults] setObject:newRootPath forKey:bRootPathKey];
     }
