@@ -31,10 +31,29 @@ typedef enum {
 
 // Should we ask the user to allow notifications when the app initially loads up? 
 @property (nonatomic, readwrite) BOOL shouldAskForNotificationsPermission;
+
+/// Custom background color of BChatViewController's main view.
+@property (nonatomic, readwrite) NSString * chatBgColor;
+
+/// Hide the section that shows "Today", "Yesterday", etc.
+@property (nonatomic, readwrite) BOOL hideDayOfTheWeekSection;
+/// Add a shadow to the message bubble using a default shadow configuration.
+@property (nonatomic, readwrite) BOOL addShadowOnMessageBubble;
+@property (nonatomic, readwrite) BOOL showReadStatus;
+/// Format to be used for NSPredicate.
+@property (nonatomic, readwrite) NSString * dateFilterFormat;
+/// An NSDate filter used to filter thread messages to show only the messages that are greater than or equal
+/// the set dateFilter.
+@property (nonatomic, readwrite) NSDate * dateFilter;
     
 // Background color of messages: hex value like "FFFFFF"
 @property (nonatomic, readwrite) NSString * messageColorMe;
 @property (nonatomic, readwrite) NSString * messageColorReply;
+
+/// Custom placeholder for chat screen's textview.
+@property (nonatomic, readwrite) NSString * chatTextViewPlaceholder;
+/// Custom font for chat screen's textview.
+@property (nonatomic, readwrite) UIFont * chatTextViewFont;
 
 // The Firebase root path. Data will be added to Firebase root/rootPath...
 // this allows you to run multiple chat instances on one Firebase database
@@ -54,6 +73,12 @@ typedef enum {
 
 // Should empty chats be shown in the threads view?
 @property (nonatomic, readwrite) BOOL showEmptyChats;
+
+/// Show profile picture on every message cell.
+@property (nonatomic, readwrite) BOOL showProfilePictureOnEveryCell;
+
+/// Value of profilePictureOnCellTapEnabled is enabled by default to follow previous implementation.
+@property (nonatomic, readwrite) BOOL profilePictureOnCellTapEnabled;
 
 // User profile image
 @property (nonatomic, readwrite) NSString * defaultAvatarURL;
@@ -107,6 +132,8 @@ typedef enum {
 @property (nonatomic, readwrite) int textInputViewMaxLines;
 @property (nonatomic, readwrite) int textInputViewMaxCharacters;
 
+@property(nonatomic, readwrite) BOOL publicChatAutoSubscriptionEnabled;
+
 // Google login credentials
 @property (nonatomic, readwrite) NSString * googleClientKey;
 
@@ -140,6 +167,8 @@ typedef enum {
 @property(nonatomic, readwrite) NSString * messageBubbleMaskLast;
 @property(nonatomic, readwrite) NSString * messageBubbleMaskSingle;
 
+/// Hide the name label for each message bubble.
+@property(nonatomic, readwrite) BOOL hideNameLabel;
 @property(nonatomic, readwrite) bNameLabelPosition nameLabelPosition;
 @property(nonatomic, readwrite) BOOL combineTimeWithNameLabel;
 
@@ -165,6 +194,9 @@ typedef enum {
 @property (nonatomic, readwrite) UIFont * messageTimeFont;
 @property (nonatomic, readwrite) UIFont * messageNameFont;
 
+/// Set the custom color of the time label. If not set, it will use the default color of time label.
+@property (nonatomic, readwrite) NSString * messageTimeColor;
+
 @property (nonatomic, readwrite) UIFont * threadTitleFont;
 @property (nonatomic, readwrite) UIFont * threadTimeFont;
 @property (nonatomic, readwrite) UIFont * threadSubtitleFont;
@@ -175,6 +207,9 @@ typedef enum {
 @property (nonatomic, readwrite) int audioMessageMaxLengthSeconds;
 
 @property (nonatomic, readwrite) BOOL prefersLargeTitles;
+
+@property (nonatomic, readwrite) NSMutableDictionary * remote;
+@property (nonatomic, readwrite) BOOL remoteConfigEnabled;
 
 // The default search indexes - i.e. which user/meta values are we searching for? If you add
 // custom values remember to add the relevant indexOn values to the Firebase security rules
@@ -228,10 +263,12 @@ typedef enum {
 
 // Show local notifications when a message is received
 @property (nonatomic, readwrite) BOOL showLocalNotifications;
+@property (nonatomic, readwrite) BOOL showLocalNotificationsForPublicChats;
 
 // Profile Pictures
 @property (nonatomic, readwrite) BOOL profilePicturesEnabled;
-
+// Show Profil view when tap on profil Icon
+@property (nonatomic, readwrite) BOOL showProfileViewOnTap;
 // Nearby Users Module Settings
 
 // Distance bands in meters
@@ -239,6 +276,11 @@ typedef enum {
 
 // How much distance must be moved to update the server with our new location
 @property (nonatomic, readwrite) int nearbyUsersMinimumLocationChangeToUpdateServer;
+
+/// Custom icon for the options/attachment button.
+@property (nonatomic, readwrite) NSString * optionsButtonIcon;
+/// Custom icon for the send message button.
+@property (nonatomic, readwrite) NSString * sendButtonIcon;
 
 // XMPP Auth type used which can be:
 // default, scramsha1, digestmd5, plain
@@ -261,5 +303,9 @@ typedef enum {
 
 -(NSValue *) messageBubbleMarginForType: (bMessageType) type;
 -(NSValue *) messageBubblePaddingForType: (bMessageType) type;
+
+-(id) remoteConfigValueForKey: (NSString *) key;
+-(void) updateRemoteConfig: (NSDictionary *) dict;
+-(void) setRemoteConfigValue: (id) value forKey: (NSString *) key;
 
 @end
