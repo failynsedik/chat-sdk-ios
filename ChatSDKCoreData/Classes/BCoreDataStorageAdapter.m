@@ -209,11 +209,7 @@ static void * kMainQueueKey = (void *) "Key1";
     
     if (!_privateMoc) {
         _privateMoc = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-        //_privateMoc.persistentStoreCoordinator = self.persistentStoreCoordinator;
-        NSPersistentStoreCoordinator *coordinator = [self persistentStoreCoordinator];
-        if (coordinator != nil) {
-            [_privateMoc setPersistentStoreCoordinator:coordinator];
-        }
+        _privateMoc.persistentStoreCoordinator = self.persistentStoreCoordinator;
     }
     
     return _privateMoc;

@@ -140,19 +140,17 @@
 
 -(int) unreadMessageCount {
     // Get all the threads
-    int counter = 0;
+    int i = 0;
     for (id<PThread> thread in self.threads) {
-        if (thread.type.intValue & bThreadFilterPrivateThread) {
-            for (id<PMessage> message in thread.allMessages) {
-                if (!message.senderIsMe) {
-                    if (message.readStatus != bMessageReadStatusRead) {
-                        counter++;
-                    }
+        if (thread.type.intValue & bThreadFilterPrivate) {
+            for (id<PMessage> message in thread.messagesOrderedByDateDesc) {
+                if (!message.isRead) {
+                    i++;
                 }
             }
         }
     }
-    return counter;
+    return i;
 }
 
 -(id<PUser>) model {

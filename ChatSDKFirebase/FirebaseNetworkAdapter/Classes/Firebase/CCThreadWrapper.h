@@ -16,11 +16,6 @@
     NSObject<PThread> * _model;
 }
 
-typedef void(^emptyCompletion)(void);
-
-
--(void) observeForThreadAddedWithCompletionBlock: (emptyCompletion) completion;
-
 /**
  * @brief Create a new thread with a thread data model
  */

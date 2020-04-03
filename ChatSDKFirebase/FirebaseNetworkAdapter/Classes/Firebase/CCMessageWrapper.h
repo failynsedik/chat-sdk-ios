@@ -18,9 +18,6 @@
     NSObject<PMessage> * _model;
 }
 
--(void) setReadStatusOnFirebase: (bMessageReadStatus) status forUserID: (NSString*) userID;
-
--(id) initWithModel: (id<PMessage>) model;
 /**
  * @brief Create a new message from a server snapshot
  */

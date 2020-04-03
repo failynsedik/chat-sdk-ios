@@ -20,7 +20,7 @@
     if ((self = [self init])) {
         NSString * entityID = snapshot.key;
         _model = [BChatSDK.db fetchOrCreateEntityWithID:entityID withType:bMessageEntity];
-        [self deserialize:snapshot.valueInExportFormat];
+        [self deserialize:snapshot.value];
     }
     return self;
 }
@@ -55,7 +55,7 @@
 -(RXPromise *) push {
     
     RXPromise * promise = [RXPromise new];
-    
+
     // Add the message to Firebase
     FIRDatabaseReference * ref = [self ref];
     _model.entityID = ref.key;
@@ -79,49 +79,17 @@
     return data;
 }
 
--(void) setReadStatusOnFirebase: (bMessageReadStatus) status forUserID: (NSString*) userID {
-    
-    FIRDatabaseReference* threadMessagesReference = [FIRDatabaseReference threadMessagesRef:self.model.thread.entityID];
-    
-    FIRDatabaseReference* messageReference = [threadMessagesReference child:self.model.entityID];
-    
-    FIRDatabaseReference* readStatusReference = [messageReference child:bReadPath];
-    
-    FIRDatabaseReference* readByReference = [readStatusReference child:BChatSDK.currentUser.entityID];
-    
-    FIRDatabaseReference* statusValueReference = [readByReference child:bStatus];
-    
-    NSNumber* numberStatus = [[NSNumber alloc] initWithInt:status];
-    
-    [statusValueReference setValue:numberStatus withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
-        
-        if (!error) {
-            self.model.read = numberStatus;
-            
-            NSDictionary* statusDictionary = @{userID:
-                                                   @{@"status": numberStatus}
-                                               };
-            
-            self.model.readStatus = statusDictionary;
-            [BChatSDK.core save];
-            [BChatSDK.core saveToStore];
-        } else {
-            NSLog(@"Reading process failed");
-        }
-        
-    }];
-    
-}
-
 -(NSMutableDictionary *) serialize {
-    NSMutableDictionary * dict = [NSMutableDictionary dictionaryWithDictionary:@{bType: _model.type,
-                                                                                 bJSONV2: _model.json,
-                                                                                 bDate: [FIRServerValue timestamp],
-                                                                                 bUserFirebaseID: _model.userModel.entityID,
-                                                                                 bReadPath: self.initialReadReceipts,
-                                                                                 bMetaPath: _model.meta ? _model.meta : @{}}];
-    
-    return dict;
+    NSDictionary * dict = @{bType: _model.type,
+                             bJSONV2: _model.meta, // Deprecated in favour of bMeta
+                             bDate: [FIRServerValue timestamp],
+                             bUserFirebaseID: _model.userModel.entityID, // Deprecated in favour of bTo
+                             bReadPath: self.initialReadReceipts,
+                             bMetaPath: _model.meta,
+                             bFrom: _model.userModel.entityID,
+                             bTo: self.getTo};
+
+    return [NSMutableDictionary dictionaryWithDictionary:dict];
 }
 
 -(NSArray<NSString *> *) getTo {
@@ -286,7 +254,7 @@
             [promise rejectWithReason:error];
         }
     }];
-    
+
     return promise;
 }
 

@@ -38,7 +38,7 @@
 -(RXPromise *) on {
     
     RXPromise * promise = [RXPromise new];
-    
+
     if (((NSManagedObject *)_model).on) {
         [promise resolveWithResult:self];
         return promise;
@@ -55,10 +55,10 @@
             [promise resolveWithResult:self];
             
             // TODO: Move this to inside the read receipt module
-            //            if(BChatSDK.readReceipt) {
-            //                [BChatSDK.readReceipt updateReadReceiptsForThread:self.model];
-            //            }
-            
+//            if(BChatSDK.readReceipt) {
+//                [BChatSDK.readReceipt updateReadReceiptsForThread:self.model];
+//            }
+
         }
         else {
             [promise rejectWithReason:Nil];
@@ -87,24 +87,16 @@
     }
 }
 
--(void) observeForThreadAddedWithCompletionBlock: (emptyCompletion) completion {
-    FIRDatabaseReference* threadsReference = [FIRDatabaseReference userThreadsRef:BChatSDK.currentUser.entityID];
-    
-    [threadsReference observeEventType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
-        completion();
-    }];
-}
-
 // TODO: Remove promise maybe
 -(RXPromise *) messagesOn {
     __weak __typeof__(self) weakSelf = self;
-    
+
     if(BChatSDK.readReceipt) {
         [BChatSDK.readReceipt updateReadReceiptsForThread:self.model];
     }
     
     RXPromise * promise = [RXPromise new];
-    
+
     if (((NSManagedObject *)_model).messagesOn) {
         [promise resolveWithResult:self];
         return promise;
@@ -113,7 +105,7 @@
     
     return [self threadDeletedDate].thenOnMain(^id(NSDate * deletedDate) {
         __typeof__(self) strongSelf = weakSelf;
-        
+
         FIRDatabaseQuery * query = [FIRDatabaseReference threadMessagesRef:strongSelf.model.entityID];
         
         // Get the last message from the thread
@@ -150,7 +142,7 @@
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
             [query observeEventType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot * snapshot) {
                 __typeof__(self) strongSelf = weakSelf;
-                
+
                 if (![snapshot.value isEqual: [NSNull null]]) {
                     
                     if(BChatSDK.blocking) {
@@ -180,9 +172,7 @@
                     NSLog(@"Message: %@", message.model.text);
                     
                     [BChatSDK.core save];
-                    
-                    [BChatSDK.hook executeHookWithName:bHookMessageRecieved data:@{bHookMessageReceived_PMessage: message.model}];
-                    
+
                     if (newMessage) {
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [BHookNotification notificationMessageReceived: message.model];
@@ -252,7 +242,7 @@
         return;
     }
     ((NSManagedObject *)_model).metaOn = YES;
-    
+
     FIRDatabaseReference * ref = [FIRDatabaseReference threadMetaRef:_model.entityID];
     [ref observeEventType:FIRDataEventTypeValue withBlock:^(FIRDataSnapshot * snapshot) {
         if(snapshot.value != [NSNull null] && [snapshot.value isKindOfClass: [NSDictionary class]]) {
@@ -331,13 +321,13 @@
  * @return RXPromise On success return the date or Nil if the thread hasn't been deleted
  */
 -(RXPromise *) threadDeletedDate {
-    
+   
     RXPromise * promise = [RXPromise new];
     
     id<PUser> currentUser = BChatSDK.currentUser;
-    
+
     FIRDatabaseReference * currentThreadUser = [[FIRDatabaseReference threadUsersRef:self.entityID] child:currentUser.entityID];
-    
+
     [currentThreadUser observeSingleEventOfType:FIRDataEventTypeValue withBlock:^(FIRDataSnapshot * snapshot) {
         if (![snapshot.value isEqual: [NSNull null]] && snapshot.value[bDeletedKey]) {
             [promise resolveWithResult:[BFirebaseCoreHandler timestampToDate:snapshot.value[bDeletedKey]]];
@@ -392,14 +382,14 @@
               // it get's regenerated
               //[self off];
               //[self messagesOff];
-            [[NSNotificationCenter defaultCenter] postNotificationName:bNotificationThreadDeleted object:Nil];
+                [BHookNotification notificationThreadRemoved:_model];
             
-            return Nil;
+                  return Nil;
             
-        }, ^id(NSError * error) {
-            [BChatSDK.db undo];
-            return error;
-        });
+              }, ^id(NSError * error) {
+                  [BChatSDK.db undo];
+                  return error;
+              });
     }
     else {
         
@@ -414,7 +404,7 @@
 -(RXPromise *) loadMoreMessagesFromDate: (NSDate *) date count: (int) count {
     
     RXPromise * promise = [RXPromise new];
-    
+
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
         FIRDatabaseReference * messagesRef = [FIRDatabaseReference threadMessagesRef:self.entityID];
@@ -440,9 +430,6 @@
                     
                     // If we are loading historic messages, assume they have been delivered
                     [message.model setDelivered: @YES];
-                    
-                    // Associate the messages with the thread
-                    [self.model addMessage:message.model];
                     
                     [messages addObject:message.model];
                 }
@@ -596,7 +583,7 @@
         }
     }];
     
-    //    // When we disconnect, we leave all our public threads
+//    // When we disconnect, we leave all our public threads
     if (_model.type.intValue & bThreadFilterPublic) {
         [threadUsersRef onDisconnectRemoveValue];
     }
@@ -653,35 +640,35 @@
             [promise rejectWithReason:error];
         }
     }];
-    
+
     return promise;
 }
 
 -(RXPromise *) removeUser: (CCUserWrapper *) user {
     return [self removeUserWithEntityID:user.entityID].thenOnMain(^id(id success)
-                                                                  {
-                                                                      // We only add the thread to the user if it's a private thread
-                                                                      if (_model.type.intValue & bThreadFilterPrivate) {
-                                                                          return [user removeThreadWithEntityID:self.entityID];
-                                                                      }
-                                                                      else {
-                                                                          return success;
-                                                                      }
-                                                                  }, Nil);
+    {
+        // We only add the thread to the user if it's a private thread
+        if (_model.type.intValue & bThreadFilterPrivate) {
+            return [user removeThreadWithEntityID:self.entityID];
+        }
+        else {
+            return success;
+        }
+    }, Nil);
     
 }
 
 -(RXPromise *) addUser: (CCUserWrapper *) user {
     return [self addUserWithEntityID:user.entityID].thenOnMain(^id(id success)
-                                                               {
-                                                                   // We only add the thread to the user if it's a private thread
-                                                                   if (_model.type.intValue & bThreadFilterPrivate) {
-                                                                       return [user addThreadWithEntityID:self.entityID];
-                                                                   }
-                                                                   else {
-                                                                       return success;
-                                                                   }
-                                                               }, Nil);
+    {
+        // We only add the thread to the user if it's a private thread
+        if (_model.type.intValue & bThreadFilterPrivate) {
+            return [user addThreadWithEntityID:self.entityID];
+        }
+        else {
+            return success;
+        }
+    }, Nil);
 }
 
 #pragma EntityWrapper protocol

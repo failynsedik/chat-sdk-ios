@@ -23,7 +23,7 @@
     BOOL authenticated = [self isAuthenticated];
     if (authenticated) {
         
-        //        [[FIRAuth auth] signOut:Nil];
+//        [[FIRAuth auth] signOut:Nil];
         
         // If the user listeners have been added then authenticate completed successfully
         if(_isAuthenticatedThisSession) {
@@ -53,14 +53,13 @@
     
     // Stop observing the user
     if(user) {
-        NSDictionary * data = @{bHookWillLogout_PUser: user};
-        [BChatSDK.hook executeHookWithName:bHookWillLogout data:data];
-        
-        [BStateManager userOff: user.entityID];
+        [BHookNotification notificationWillLogout:user];
+        [BChatSDK.event currentUserOff: user.entityID];
     }
     
     NSError * error = Nil;
     if([[FIRAuth auth] signOut:&error]) {
+
         _isAuthenticatedThisSession = NO;
         [self setLoginInfo:Nil];
         [BChatSDK.core goOffline];
@@ -71,35 +70,11 @@
             [BHookNotification notificationDidLogout:user];
         }
         
-        // *** FIXED INCORRECT USER'S DATA ***
-        // (GLOBAL CLEAN-UP)
-        [BChatSDK.db deleteAllData];
-        [BChatSDK.core save];
-        [BChatSDK.core saveToStore];
-        
-        
         [promise resolveWithResult:Nil];
     }
     else {
         [promise rejectWithReason:error];
     }
-    return promise;
-}
-    
--(RXPromise *) retrieveRemoteConfig {
-    RXPromise * promise = [RXPromise new];
-    
-    if (BChatSDK.config.remoteConfigEnabled) {
-        [[FIRDatabaseReference configRef] observeSingleEventOfType:FIRDataEventTypeValue withBlock:^(FIRDataSnapshot * snapshot) {
-            if (![snapshot.value isEqual: [NSNull null]]) {
-                [BChatSDK.config updateRemoteConfig:snapshot.value];
-            }
-            [promise resolveWithResult:Nil];
-        }];
-    } else {
-        [promise resolveWithResult:Nil];
-    }
-    
     return promise;
 }
 
@@ -126,6 +101,53 @@
     // Depending on the login method we need to authenticate with Firebase
     switch (details.type)
     {
+        case bAccountTypeFacebook: {
+            if (BChatSDK.socialLogin) {
+                [BChatSDK.socialLogin loginWithFacebook].thenOnMain(^id(NSString * token) {
+                    FIRAuthCredential * credential = [FIRFacebookAuthProvider credentialWithAccessToken:token];
+                    //[promise resolveWithResult:credential];
+                    [[FIRAuth auth] signInWithCredential:credential completion:handleResult];
+
+                    return Nil;
+                }, ^id (NSError * error) {
+                    handleResult(Nil, error);
+                    return Nil;
+                });
+            }
+        }
+            break;
+        case bAccountTypeTwitter:
+        {
+            if (BChatSDK.socialLogin) {
+                [BChatSDK.socialLogin loginWithTwitter].thenOnMain(^id(NSArray * array) {
+                    FIRAuthCredential * credential = [FIRTwitterAuthProvider credentialWithToken:array.firstObject
+                                                                                          secret:array.lastObject];
+                    [[FIRAuth auth] signInWithCredential:credential completion:handleResult];
+                    return Nil;
+                    
+                }, ^id (NSError * error) {
+                    handleResult(Nil, error);
+                    return Nil;
+                });
+            }
+        }
+            break;
+        case bAccountTypeGoogle:
+        {
+            if (BChatSDK.socialLogin) {
+                [BChatSDK.socialLogin loginWithGoogle].thenOnMain(^id(NSArray * array) {
+                    FIRAuthCredential * credential = [FIRGoogleAuthProvider credentialWithIDToken:array.firstObject
+                                                                                      accessToken:array.lastObject];
+                    [[FIRAuth auth] signInWithCredential:credential completion:handleResult];
+                    return Nil;
+                    
+                }, ^id (NSError * error) {
+                    handleResult(Nil, error);
+                    return Nil;
+                });
+            }
+        }
+            break;
         case bAccountTypeUsername:
         {
             [[FIRAuth auth] signInWithEmail:details.username password:details.password completion:handleResult];
@@ -175,13 +197,13 @@
     __weak __typeof__(self) weakSelf = self;
     return tokenPromise.thenOnMain(^id(NSString * token) {
         __typeof__(self) strongSelf = weakSelf;
-        
+
         NSString * uid = firebaseUser.uid;
         
         // Save the authentication ID for the current user
         // Set the current user
         [strongSelf setLoginInfo:@{bAuthenticationIDKey: uid,
-                                   bTokenKey: token ? token : @""}];
+                             bTokenKey: [NSString safe: token]}];
         
         CCUserWrapper * user = [CCUserWrapper userWithAuthUserData:firebaseUser];
         if (details.name && !user.model.name) {
@@ -192,7 +214,17 @@
             strongSelf->_isAuthenticatedThisSession = YES;
             // Update the user from the remote server
             return [user once].thenOnMain(^id(id<PUserWrapper> user_) {
-                [BChatSDK.hook executeHookWithName:bHookUserAuthFinished data:@{bHookUserAuthFinished_PUser: user.model}];
+
+                // If the user was authenticated automatically
+                if (!details) {
+                    [BHookNotification notificationDidAuthenticate:user.model type:bHook_AuthenticationTypeCached];
+                }
+                else if (details.type == bAccountTypeRegister) {
+                    [BHookNotification notificationDidAuthenticate:user.model type:bHook_AuthenticationTypeSignUp];
+                }
+                else {
+                    [BHookNotification notificationDidAuthenticate:user.model type:bHook_AuthenticationTypeLogin];
+                }
                 
                 [BChatSDK.core save];
                 
@@ -209,9 +241,7 @@
                 
                 [user push];
                 
-                return [self retrieveRemoteConfig].thenOnMain(^id(id success) {
-                    return user.model;
-                }, Nil);
+                return user.model;
                 
             }, Nil);
         }

@@ -86,7 +86,6 @@
 @synthesize textInputViewMaxLines;
 @synthesize textInputViewMaxCharacters;
 @synthesize shouldAskForNotificationsPermission;
-
 @synthesize xmppAuthType;
 
 @synthesize nearbyUserDistanceBands;
@@ -121,7 +120,7 @@
         
         shouldOpenChatWhenPushNotificationClicked = YES;
         onlySendPushToOfflineUsers = NO;
-        
+                
         loginUsernamePlaceholder = Nil;
         
         pushNotificationSound = @"default";
@@ -215,7 +214,7 @@
 }
 
 -(void) setDefaultUserNamePrefix:(NSString *)defaultUserNamePrefix {
-    _defaultUserName = [defaultUserNamePrefix stringByAppendingFormat:@"%i", arc4random() % 999];
+     _defaultUserName = [defaultUserNamePrefix stringByAppendingFormat:@"%i", arc4random() % 999];
 }
 
 -(void) xmppWithHostAddress: (NSString *) hostAddress {
